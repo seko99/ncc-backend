@@ -1,0 +1,12 @@
+@startuml
+start
+:в событии приходит sessionId;
+:найти сессию по sessionId;
+if (сессия найдена?) then (да)
+    #palegreen :записать в журнал;
+    #palegreen :удалить сессию;
+else (нет)
+    #pink :ошибка!;
+endif
+stop
+@enduml

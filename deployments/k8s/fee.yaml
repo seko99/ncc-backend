@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fee
+  namespace: $NAMESPACE
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity: {}
+          containers:
+            - args:
+                - fee
+                - -y
+              command:
+                - ./bin
+              image: registry.evixo.ru/dev/ncc-backend:$RELEASE
+              imagePullPolicy: Always
+              name: fee
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              workingDir: /app
+              env:
+                - name: DB_HOST
+                  valueFrom:
+                    configMapKeyRef:
+                      key: DB_HOST
+                      name: ncc-db-config
+                      optional: false
+                - name: DB_PORT
+                  valueFrom:
+                    configMapKeyRef:
+                      key: DB_PORT
+                      name: ncc-db-config
+                      optional: false
+                - name: DB_NAME
+                  valueFrom:
+                    configMapKeyRef:
+                      key: DB_NAME
+                      name: ncc-db-config
+                      optional: false
+                - name: DB_USER
+                  valueFrom:
+                    configMapKeyRef:
+                      key: DB_USER
+                      name: ncc-db-config
+                      optional: false
+                - name: DB_PASSWORD
+                  valueFrom:
+                    configMapKeyRef:
+                      key: DB_PASSWORD
+                      name: ncc-db-config
+                      optional: false
+                - name: TZ
+                  value: Europe/Moscow
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: 0 2 * * *
+  successfulJobsHistoryLimit: 3
+  suspend: false

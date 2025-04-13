@@ -1,0 +1,56 @@
+listen: "127.0.0.1:18080"
+JwtSecret: "d33bb20a-8b92-4143-96b5-922fe037436d"
+watcher:
+  delay: 10s
+informings:
+  smsProvider:
+    uri: "http://127.0.0.1:7890/sms-api"
+    token: "changeme"
+reporter:
+  telegram:
+    token: changeme
+    chatID: 0
+exporter:
+  host: "changeme"
+  path: "/home/in/customers"
+  username: "in"
+  key: "id_rsa.key"
+dhcp:
+  listen: 1067
+radius:
+  test:
+    interim: 5s
+    limit: 1000
+    secret: someSecret902
+    auth: "localhost:1812"
+    acct: "localhost:1813"
+    nas:
+      ip: "10.0.27.1"
+      identifier: "local"
+  auth:
+    listen: "0.0.0.0:1812"
+  acct:
+    listen: "0.0.0.0:1813"
+  control:
+    enabled: false
+    listen: "0.0.0.0:8011"
+  update: 10s
+  secret: someSecret902
+  watcher:
+    start: 1s
+    stop: 1s
+    interim: 5s
+db:
+  host: "demo.ncc.evixo.ru"
+  port: 54320
+  name: "ncc"
+  user: "postgres"
+  password: "ncc1234"
+  max_open_connections: 10
+  max_idle_connections: 10
+  max_life_time: 1m
+queue:
+  host: "demo.ncc.evixo.ru"
+  port: 56720
+  user: "ncc"
+  password: "ncc1234"

@@ -1,0 +1,132 @@
+version: "2.1"
+
+networks:
+  ncc-network:
+    driver: bridge
+
+services:
+
+  ### PostgreSQL
+  postgres:
+    container_name: ncc-postgres
+    restart: unless-stopped
+    image: postgres:latest
+    networks:
+      - ncc-network
+    ports:
+      - "54320:5432"
+    healthcheck:
+      test: pg_isready -U postgres -d ncc
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=ncc1234
+      - POSTGRES_DB=ncc
+    volumes:
+      - "/opt/postgres:/var/lib/postgresql/data"
+
+  ### RabbitMQ
+  rabbitmq:
+    container_name: ncc-rabbitmq
+    restart: unless-stopped
+    image: rabbitmq:3
+    networks:
+      - ncc-network
+    ports:
+      - "56720:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment:
+      - RABBITMQ_DEFAULT_USER=ncc
+      - RABBITMQ_DEFAULT_PASS=ncc1234
+    volumes:
+      - "/opt/rabbitmq:/var/lib/rabbitmq"
+
+  ### Migrator
+  migrator:
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    container_name: ncc-migrator
+    restart: "no"
+    image: registry.evixo.ru/dev/ncc-backend:4a7a8e61
+    networks:
+      - ncc-network
+    environment:
+      - DB_HOST=ncc-postgres
+      - DB_PORT=5432
+      - DB_NAME=ncc
+      - DB_USER=postgres
+      - DB_PASSWORD=ncc1234
+    command:
+      - migrate
+      - --yes
+
+  ### Simulator
+  simulator:
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    container_name: ncc-simulator
+    restart: unless-stopped
+    image: registry.evixo.ru/dev/ncc-backend:4a7a8e61
+    networks:
+      - ncc-network
+    ports:
+      - "18080:18080"
+    environment:
+      - LISTEN=:18080
+      - QUEUE_HOST=ncc-rabbitmq
+      - QUEUE_PORT=5672
+      - QUEUE_USER=ncc
+      - QUEUE_PASSWORD=ncc1234
+      - DB_HOST=ncc-postgres
+      - DB_PORT=5432
+      - DB_NAME=ncc
+      - DB_USER=postgres
+      - DB_PASSWORD=ncc1234
+      - RADIUS_TEST_AUTH=ncc-radius-server:1812
+      - RADIUS_TEST_ACCT=ncc-radius-server:1813
+      - RADIUS_TEST_SECRET=someSecret902
+      - RADIUS_TEST_NAS_IP=10.0.27.1
+      - RADIUS_TEST_NAS_IDENTIFIER=local
+    command:
+      - simulator
+      - --daemon
+
+  ### NCC2
+  ncc2:
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    container_name: ncc2
+    restart: unless-stopped
+    image: registry.evixo.ru/dev/ncc2:release-0.1.0-a67f597c
+    networks:
+      - ncc-network
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=ncc-postgres
+      - DB_PORT=5432
+      - DB_NAME=ncc
+      - DB_USER=postgres
+      - DB_PASSWORD=ncc1234
+      - SIM_URL=http://ncc-simulator:18080
+      - AMQP_DSN=amqp://ncc:ncc1234@ncc-rabbitmq:5672

@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: ncc-simulator
+  description: Simulator
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080'
+paths:
+
+  /api/v1/radius/kill:
+    post:
+      tags:
+        - radius
+      description: |
+        Kill sessions from BRAS cache
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                sessions:
+                  type: integer
+                  required: true
+                  description: number of sessions to kill
+                random:
+                  type: boolean
+                  required: false
+                  description: kill random sessions rather than sequential from beginning
+      responses:
+        '200':
+          description: OK

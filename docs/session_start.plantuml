@@ -1,0 +1,52 @@
+@startuml
+start
+:в событии приходит UserName, IP и sessionId
+UserName может быть логином или IP;
+if (UserName это IP?) then (да)
+	if (UserName==Framed-IP?) then (нет)
+		#pink :ErrIPNotEqual;
+		stop
+	else (да)
+		:найти сессию по IP;
+		if (сессия найдена?) then (нет)
+			:найти lease по IP;
+			if (lease найдена?) then (да)
+			    if (есть customerId?) then (да)
+			    else (нет)
+			        #pink :ErrNoBinding;
+			        stop
+			    endif
+			else (нет)
+				#pink :ErrNoLease;
+				stop
+			endif
+		else (да)
+			if (sessionId совпадает?) then (да)
+				#pink :ErrDuplicate;
+				stop
+			else (нет)
+				:другая сессия того же пользователя;
+				:закрыть найденную;
+			endif
+		endif
+	endif
+else (нет)
+	:найти сессию по логину;
+	if (сессия найдена?) then (да)
+ 		if (sessionId совпадает?) then (да)
+			#pink :ErrDuplicate;
+			stop
+		else (нет)
+			:другая сессия того же пользователя;
+			if (кол-во сессий >= max?) then (нет)
+			else (да)
+				#pink :ErrMaxSessions;
+				stop
+			endif
+		endif
+  	else (нет)
+	endif
+endif
+#palegreen :создать сессию;
+stop
+@enduml

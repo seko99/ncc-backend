@@ -1,0 +1,27 @@
+@startuml
+start
+:в событие приходит SessionId;
+:найти сессию по sessionId;
+if (сессия найдена?) then (нет)
+    :найти сессию в журнале;
+    if (найдена в журнале?) then (да)
+        if (причина завершения - Stop?) then (да)
+            :Interim после Stop:
+            обновить данные в журнале;
+        else (нет)
+            #palegreen :перенести из журнала;
+        endif
+    else (нет)
+        #palegreen :создать сессию;
+    endif
+    stop
+else (да)
+    if (IP совпадает?) then (да)
+    else (нет)
+        #pink :ошибка!;
+        stop
+    endif
+endif
+#palegreen :обновить сессию;
+stop
+@enduml

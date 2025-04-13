@@ -1,0 +1,185 @@
+variables:
+  DOCKER_REGISTRY: "registry.evixo.ru"
+  DOCKER_IMAGE_NAME: "dev/ncc-backend"
+
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+    GOPROXY: http://build.evixo.ru:9050
+  before_script:
+    - mkdir -p .go
+  after_script:
+    - chmod +w .go -R
+  cache:
+    paths:
+      - .go/pkg/mod/
+stages:
+  - vet
+  - test
+  - integration-tests
+  - build-stage
+  - build-release
+  - deploy-stage
+  - deploy-prod
+
+vet:
+  stage: vet
+  extends: .go-cache
+  script:
+    - go vet ./...
+
+test:
+  stage: test
+  extends: .go-cache
+  script:
+    - go test $(go list ./... | grep -v /tests/integration)
+
+integration-tests:
+  stage: integration-tests
+  only:
+    - merge_requests
+  extends: .go-cache
+  script:
+    - go test ./tests/integration/
+
+build-stage:
+  image: docker:latest
+  stage: build-stage
+  extends: .go-cache
+  only:
+    - /^develop$/
+  script:
+    - export RELEASE=$CI_COMMIT_SHORT_SHA
+    - docker build --pull --cache-from $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$RELEASE --build-arg TAG=$CI_COMMIT_SHORT_SHA -t "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$RELEASE" -f ./deployments/build/docker/app/Dockerfile ./
+    - docker push "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$RELEASE"
+
+build-release:
+  image: docker:latest
+  stage: build-release
+  extends: .go-cache
+  only:
+    - /^release-*/
+  script:
+    - export RELEASE="$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    - docker build --pull --cache-from $DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$RELEASE --build-arg TAG=$CI_COMMIT_SHORT_SHA -t "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$RELEASE" -f ./deployments/build/docker/app/Dockerfile ./
+    - docker push "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$RELEASE"
+
+scheduler-informings-stage:
+  stage: deploy-stage
+  when: manual
+  only:
+    - /^develop$/
+  before_script:
+    - echo $KUBE_CONFIG | base64 -d > ./k8s-config-stage
+  after_script:
+    - rm ./k8s-config-stage
+  script:
+    - export RELEASE=$CI_COMMIT_SHORT_SHA
+    - export NAMESPACE=default
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/scheduler-informings.yaml | kubectl --kubeconfig=./k8s-config-stage --namespace $NAMESPACE apply -f -
+
+scheduler-informings-prod:
+  stage: deploy-prod
+  when: manual
+  only:
+    - /^release-*/
+  before_script:
+    - echo $KUBE_CONFIG_PROD | base64 -d > ./k8s-config-prod
+  after_script:
+    - rm ./k8s-config-prod
+  script:
+    - export RELEASE="$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    - export NAMESPACE=ncc
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/scheduler-informings.yaml | kubectl --kubeconfig=./k8s-config-prod --namespace $NAMESPACE apply -f -
+
+scheduler-exporter-stage:
+  stage: deploy-stage
+  when: manual
+  only:
+    - /^develop$/
+  before_script:
+    - echo $KUBE_CONFIG | base64 -d > ./k8s-config-stage
+  after_script:
+    - rm ./k8s-config-stage
+  script:
+    - export RELEASE=$CI_COMMIT_SHORT_SHA
+    - export NAMESPACE=default
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/scheduler-exporter.yaml | kubectl --kubeconfig=./k8s-config-stage --namespace $NAMESPACE apply -f -
+
+scheduler-exporter-prod:
+  stage: deploy-prod
+  when: manual
+  only:
+    - /^release-*/
+  before_script:
+    - echo $KUBE_CONFIG_PROD | base64 -d > ./k8s-config-prod
+  after_script:
+    - rm ./k8s-config-prod
+  script:
+    - export RELEASE="$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    - export NAMESPACE=ncc
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/scheduler-exporter.yaml | kubectl --kubeconfig=./k8s-config-prod --namespace $NAMESPACE apply -f -
+
+fee-stage:
+  stage: deploy-stage
+  when: manual
+  only:
+    - /^develop$/
+  before_script:
+    - echo $KUBE_CONFIG | base64 -d > ./k8s-config-stage
+  after_script:
+    - rm ./k8s-config-stage
+  script:
+    - export RELEASE=$CI_COMMIT_SHORT_SHA
+    - export NAMESPACE=default
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/fee.yaml | kubectl --kubeconfig=./k8s-config-stage --namespace $NAMESPACE apply -f -
+
+fee-prod:
+  stage: deploy-prod
+  when: manual
+  only:
+    - /^release-*/
+  before_script:
+    - echo $KUBE_CONFIG_PROD | base64 -d > ./k8s-config-prod
+  after_script:
+    - rm ./k8s-config-prod
+  script:
+    - export RELEASE="$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    - export NAMESPACE=ncc
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/fee.yaml | kubectl --kubeconfig=./k8s-config-prod --namespace $NAMESPACE apply -f -
+
+payment-gateway-stage:
+  stage: deploy-stage
+  when: manual
+  only:
+    - /^develop$/
+  before_script:
+    - echo $KUBE_CONFIG | base64 -d > ./k8s-config-stage
+  after_script:
+    - rm ./k8s-config-stage
+  script:
+    - export RELEASE=$CI_COMMIT_SHORT_SHA
+    - export NAMESPACE=default
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/payment-gateway.yaml | kubectl --kubeconfig=./k8s-config-stage --namespace $NAMESPACE apply -f -
+
+payment-gateway-prod:
+  stage: deploy-prod
+  when: manual
+  only:
+    - /^release-*/
+  before_script:
+    - echo $KUBE_CONFIG_PROD | base64 -d > ./k8s-config-prod
+  after_script:
+    - rm ./k8s-config-prod
+  script:
+    - export RELEASE="$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    - export NAMESPACE=ncc
+    - echo "Deploying RELEASE=$RELEASE to $NAMESPACE"
+    - envsubst < ./deployments/k8s/payment-gateway.yaml | kubectl --kubeconfig=./k8s-config-prod --namespace $NAMESPACE apply -f -

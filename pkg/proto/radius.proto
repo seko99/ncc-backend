@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package radius;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "code.evixo.ru/ncc/ncc-backend/radius";
+
+message InterimUpdate {
+    int64 Timestamp = 1;
+    string AcctSessionId = 2;
+}
