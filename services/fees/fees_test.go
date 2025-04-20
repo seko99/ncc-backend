@@ -127,4 +127,6 @@ func TestFees(t *testing.T) {
 	assert.Equal(t, models2.CustomerStateBlocked, feeDatas["user15"].NewState)
 
 	assert.Empty(t, feeDatas["user16"])
+
+	assert.Empty(t, feeDatas["user20"])
 }
