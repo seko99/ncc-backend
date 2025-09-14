@@ -11,7 +11,7 @@ reporter:
     token: changeme
     chatID: 0
 exporter:
-  host: "changeme"
+  host: "localhost"
   path: "/home/in/customers"
   username: "in"
   key: "id_rsa.key"
@@ -41,16 +41,16 @@ radius:
     stop: 1s
     interim: 5s
 db:
-  host: "demo.ncc.evixo.ru"
-  port: 54320
+  host: "localhost"
+  port: 5432
   name: "ncc"
   user: "postgres"
-  password: "ncc1234"
+  password: "changeme"
   max_open_connections: 10
   max_idle_connections: 10
   max_life_time: 1m
 queue:
-  host: "demo.ncc.evixo.ru"
-  port: 56720
+  host: "localhost"
+  port: 5672
   user: "ncc"
-  password: "ncc1234"
+  password: "changeme"
