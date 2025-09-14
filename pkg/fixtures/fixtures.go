@@ -607,31 +607,6 @@ func FakeCustomers() []models2.CustomerData {
 				},
 			},
 		},
-		{ // АП не снимать, заблокировать
-			CommonData: models2.CommonData{
-				Id:        "b2ab8f68-f4f7-47bc-82b3-12572d674b4b",
-				CreateTs:  time.Now(),
-				CreatedBy: "16558104-13cb-4ffe-8dfe-2d32d1fc3acb",
-			},
-			Uid:                  random.New().String(12, "0123456789"),
-			Login:                "user20",
-			Password:             "testPassw0rd",
-			Phone:                "70000000004",
-			Deposit:              -94.75,
-			Credit:               0.0,
-			BlockingState:        0,
-			ServiceInternetState: models2.ServiceStateDisabled,
-			ServiceInternet:      Internet1,
-			ServiceInternetId:    models2.NewNullUUID(Internet1.CommonData.Id),
-			ServiceIptvState:     models2.ServiceStateEnabled,
-			ServiceCatvState:     models2.ServiceStateEnabled,
-			Flags: []models2.CustomerFlagData{
-				{
-					Name: models2.FieldSent,
-					Val:  models2.ExprTrue,
-				},
-			},
-		},
 	}
 }
 

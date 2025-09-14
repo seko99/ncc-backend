@@ -8,6 +8,15 @@ import (
 )
 
 func (ths *Exporter) exportDocTypes() ([]exporter.ExportData, error) {
+	status, err := ths.sormExportStatusRepo.GetByFileName(domain.SormDocTypesRecord{}.FileName())
+	if err != nil {
+		return nil, fmt.Errorf("can't get export status: %w", err)
+	}
+
+	if status.Status != "PENDING" {
+		return []exporter.ExportData{}, nil
+	}
+
 	types, err := ths.documentTypesRepo.Get()
 	if err != nil {
 		return nil, fmt.Errorf("can't get document types: %w", err)

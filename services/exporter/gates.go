@@ -8,6 +8,15 @@ import (
 )
 
 func (ths *Exporter) exportGates() ([]exporter.ExportData, error) {
+	status, err := ths.sormExportStatusRepo.GetByFileName(domain.SormGatesRecord{}.FileName())
+	if err != nil {
+		return nil, fmt.Errorf("can't get export status: %w", err)
+	}
+
+	if status.Status != "PENDING" {
+		return []exporter.ExportData{}, nil
+	}
+
 	gates, err := ths.gatewayRepo.Get()
 	if err != nil {
 		return nil, fmt.Errorf("can't get gates: %w", err)

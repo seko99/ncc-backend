@@ -6,6 +6,7 @@ import (
 	"code.evixo.ru/ncc/ncc-backend/pkg/repository/psql"
 	scheduler2 "code.evixo.ru/ncc/ncc-backend/pkg/scheduler"
 	psqlstorage "code.evixo.ru/ncc/ncc-backend/pkg/storage/psql"
+	s3storage "code.evixo.ru/ncc/ncc-backend/pkg/storage/s3"
 	"code.evixo.ru/ncc/ncc-backend/services/exporter"
 	exporter2 "code.evixo.ru/ncc/ncc-backend/services/interfaces/exporter"
 	"fmt"
@@ -61,6 +62,15 @@ func RegisterExporter(cfg *config.Config, log logger.Logger, scheduler *Schedule
 		}
 	}
 
+	s3 := s3storage.NewS3(cfg, log)
+	err = s3.Connect()
+	if err != nil {
+		log.Error("can't connect to S3 storage: %v", err)
+		return fmt.Errorf("can't create S3 storage: %w", err)
+	}
+
+	backupWriter, err := exporter.NewS3Writer(s3, "backup_writer", true)
+
 	exporterService := exporter.NewExporter(
 		log,
 		exportWriter,
@@ -76,6 +86,7 @@ func RegisterExporter(cfg *config.Config, log logger.Logger, scheduler *Schedule
 		sormCustomerServicesRepo,
 		sormCustomerServicesErrorsRepo,
 		sormExportStatusRepo,
+		exporter.WithBackupEnabled(backupWriter),
 	)
 
 	scheduler.RegisterTask(scheduler2.Task{

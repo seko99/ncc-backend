@@ -8,6 +8,15 @@ import (
 )
 
 func (ths *Exporter) exportNumberingPlan() ([]exporter.ExportData, error) {
+	status, err := ths.sormExportStatusRepo.GetByFileName(domain.SormIpNumberingRecord{}.FileName())
+	if err != nil {
+		return nil, fmt.Errorf("can't get export status: %w", err)
+	}
+
+	if status.Status != "PENDING" {
+		return []exporter.ExportData{}, nil
+	}
+
 	ipNumbering, err := ths.ipNumberingRepo.Get()
 	if err != nil {
 		return nil, fmt.Errorf("can't get IP numbering: %w", err)

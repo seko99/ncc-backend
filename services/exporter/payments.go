@@ -68,6 +68,15 @@ func (ths *Exporter) exportPayments() ([]exporter.ExportData, error) {
 }
 
 func (ths *Exporter) exportPaymentTypes() ([]exporter.ExportData, error) {
+	status, err := ths.sormExportStatusRepo.GetByFileName(domain.SormPayTypesRecord{}.FileName())
+	if err != nil {
+		return nil, fmt.Errorf("can't get export status: %w", err)
+	}
+
+	if status.Status != "PENDING" {
+		return []exporter.ExportData{}, nil
+	}
+
 	paymentTypes, err := ths.paymentTypesRepo.Get()
 	if err != nil {
 		return nil, fmt.Errorf("can't get payment types: %w", err)
