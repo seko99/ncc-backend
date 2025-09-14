@@ -38,45 +38,43 @@ func (ths *Exporter) Run() error {
 
 	_, err = ths.exportCustomers()
 	if err != nil {
-		return fmt.Errorf("can't export customers: %w", err)
+		ths.log.Error("Can't export customers: %v", err)
 	}
 
 	_, err = ths.exportCustomerServices()
 	if err != nil {
-		return fmt.Errorf("can't export customer services: %w", err)
+		ths.log.Error("Can't export customer services: %v", err)
 	}
 
 	_, err = ths.exportPayments()
 	if err != nil {
-		return fmt.Errorf("can't export payments: %w", err)
+		ths.log.Error("Can't export payments: %v", err)
 	}
 
-	/*
-		_, err = ths.exportServices()
-		if err != nil {
-			return fmt.Errorf("can't prepare service list: %w", err)
-		}
+	_, err = ths.exportServices()
+	if err != nil {
+		return fmt.Errorf("can't prepare service list: %w", err)
+	}
 
-		_, err = ths.exportPaymentTypes()
-		if err != nil {
-			return fmt.Errorf("can't prepare pay types list: %w", err)
-		}
+	_, err = ths.exportPaymentTypes()
+	if err != nil {
+		return fmt.Errorf("can't prepare pay types list: %w", err)
+	}
 
-		_, err = ths.exportDocTypes()
-		if err != nil {
-			return fmt.Errorf("can't prepare document types list: %w", err)
-		}
+	_, err = ths.exportDocTypes()
+	if err != nil {
+		return fmt.Errorf("can't prepare document types list: %w", err)
+	}
 
-		_, err = ths.exportNumberingPlan()
-		if err != nil {
-			return fmt.Errorf("can't prepare IP numbering plan list: %w", err)
-		}
+	_, err = ths.exportNumberingPlan()
+	if err != nil {
+		return fmt.Errorf("can't prepare IP numbering plan list: %w", err)
+	}
 
-		_, err = ths.exportGates()
-		if err != nil {
-			return fmt.Errorf("can't prepare gates list: %w", err)
-		}
-	*/
+	_, err = ths.exportGates()
+	if err != nil {
+		return fmt.Errorf("can't prepare gates list: %w", err)
+	}
 
 	return nil
 }
